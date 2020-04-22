@@ -74,11 +74,6 @@ function returnCounter(number = 0) {
  */
 function returnArgumentsArray(...args) {
   return args;
-  // let argumentsArray = [];
-  // for (let i = 0; i < arguments.length; i++) {
-  //   argumentsArray.push(arguments[i]);
-  // }
-  // return argumentsArray;
 }
 
 /*
@@ -98,9 +93,8 @@ function returnArgumentsArray(...args) {
  */
 
 function bindFunction(fn, ...args) {
-  return () => {
-    return fn(...args)
-  }
+  let newFunc = fn.bind(null, ...args);
+  return newFunc;
 }
 
 export {
