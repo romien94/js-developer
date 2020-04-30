@@ -17,6 +17,19 @@
    isAllTrue([100, 2, 3, 4, 5], n => n < 10) // вернет false
  */
 function isAllTrue(array, fn) {
+  let flag = true;
+  if (array instanceof Array !== true || array.length === 0) {
+    throw new Error('empty array')
+  }
+  if (typeof fn !== 'function') {
+    throw new Error('fn is not a function')
+  }
+  for (let key of array) {
+    if (fn(key) === false) {
+      flag = false;
+    }
+  }
+  return flag;
 }
 
 /*
@@ -36,6 +49,19 @@ function isAllTrue(array, fn) {
    isSomeTrue([1, 2, 3, 4, 5], n => n > 20) // вернет false
  */
 function isSomeTrue(array, fn) {
+  let flag = false;
+  if (array instanceof Array !== true || array.length === 0) {
+    throw new Error('empty array');
+  }
+  if (typeof fn !== 'function') {
+    throw new Error('fn is not a function')
+  }
+  for (let key of array) {
+    if (fn(key) === true) {
+      flag = true;
+    }
+  }
+  return flag;
 }
 
 /*
@@ -49,7 +75,22 @@ function isSomeTrue(array, fn) {
  3.3: Необходимо выбрасывать исключение в случаях:
    - fn не является функцией (с текстом "fn is not a function")
  */
-function returnBadArguments(fn) {
+function returnBadArguments(fn, ...args) {
+  let exclusionsArr = [];
+  if (typeof fn !== 'function') {
+    throw new Error('fn is not a function');
+  }
+  let result;
+  let currentEl;
+  for (let i = 0; i < args.length; i++) {
+    currentEl = args[i];
+    try {
+      result = fn(currentEl)        
+    } catch (error) {
+      exclusionsArr.push(currentEl);      
+    }
+  }
+  return exclusionsArr;
 }
 
 /*
@@ -64,19 +105,58 @@ function returnBadArguments(fn) {
    - mul - умножает number на первый аргумент. Результат умножается на следующий аргумент (если передан) и так далее
 
  Количество передаваемых в методы аргументов заранее неизвестно
-
+6
  4.3: Необходимо выбрасывать исключение в случаях:
    - number не является числом (с текстом "number is not a number")
    - какой-либо из аргументов div является нулем (с текстом "division by 0")
  */
-function calculator() {
+
+function calculator(number = 0) {
+  if (typeof number !== 'number') throw new Error('number is not a number');
+
+  let calc = {
+    number: number,
+    sum(...args) {
+      let result = this.number;
+      for (let i = 0; i < args.length; i++) {
+        result += args[i]
+      }
+      return result;
+    },
+    dif(...args) {
+      let result = this.number;
+      for (let i = 0; i < args.length; i++) {
+        result -= args[i]
+      }
+      return result;
+    },
+    div(...args) {
+      for (let i = 0; i < args.length; i++) {
+        if (args[i] === 0) throw new Error('division by 0')
+      }
+      let result = this.number;
+      for (let i = 0; i < args.length; i++) {
+        result /= args[i]
+      }
+      return result;
+    },
+    mul(...args) {
+      let result = this.number;
+      for (let i = 0; i < args.length; i++) {
+        result *= args[i]
+      }
+      return result;
+    },
+  }
+
+  return calc;
 }
 
 /* При решении задач, пострайтесь использовать отладчик */
 
 export {
-    isAllTrue,
-    isSomeTrue,
-    returnBadArguments,
-    calculator
+  isAllTrue,
+  isSomeTrue,
+  returnBadArguments,
+  calculator
 };
