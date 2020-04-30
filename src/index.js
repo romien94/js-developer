@@ -21,7 +21,7 @@ function forEach(array, fn) {
 function map(array, fn) {
   let newArray = [];
   for (let i = 0; i < array.length; i++) {
-    let modifiedElement = fn(array[i], i, array);
+    const modifiedElement = fn(array[i], i, array);
     newArray.push(modifiedElement);
   }
   return newArray;
@@ -35,19 +35,13 @@ function map(array, fn) {
  */
 function reduce(array, fn, initial) {
   let prev;
+  let from;
   let result;
-  if (initial) {
-    prev = initial;
-    for (let i = 0; i < array.length; i++) {
-      result = fn(prev,array[i],i,array);
-      prev = result;
-    }
-  } else {
-    prev = array[0];
-    for (let i = 1; i < array.length; i++) {
-      result = fn(prev,array[i],i,array);
-      prev = result;
-    }
+  prev = initial? initial : array[0];
+  from = initial? 0 : 1;
+  for (let i = from; i < array.length; i++) {
+    result = fn(prev, array[i], i, array);
+    prev = result;
   }
   return result;
 }
@@ -82,7 +76,7 @@ function slice(array, from = 0, to = array.length) {
   to = to > array.length? array.length : to;
 
   for (let i = from; i < to; i++) {
-    if (array[i] === undefined) continue;
+    if (!array[i]) continue;
     newArray.push(array[i]);
   }
   return newArray;
