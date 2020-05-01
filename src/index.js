@@ -17,7 +17,6 @@
    isAllTrue([100, 2, 3, 4, 5], n => n < 10) // вернет false
  */
 function isAllTrue(array, fn) {
-  let flag = true;
   if (array instanceof Array !== true || array.length === 0) {
     throw new Error('empty array')
   }
@@ -26,10 +25,10 @@ function isAllTrue(array, fn) {
   }
   for (let key of array) {
     if (fn(key) === false) {
-      flag = false;
+      return false
     }
   }
-  return flag;
+  return true;
 }
 
 /*
@@ -48,8 +47,8 @@ function isAllTrue(array, fn) {
    isSomeTrue([1, 2, 30, 4, 5], n => n > 20) // вернет true
    isSomeTrue([1, 2, 3, 4, 5], n => n > 20) // вернет false
  */
+
 function isSomeTrue(array, fn) {
-  let flag = false;
   if (array instanceof Array !== true || array.length === 0) {
     throw new Error('empty array');
   }
@@ -57,11 +56,9 @@ function isSomeTrue(array, fn) {
     throw new Error('fn is not a function')
   }
   for (let key of array) {
-    if (fn(key) === true) {
-      flag = true;
-    }
+    if (fn(key) === true) return true;
   }
-  return flag;
+  return false;
 }
 
 /*
@@ -115,40 +112,30 @@ function calculator(number = 0) {
   if (typeof number !== 'number') throw new Error('number is not a number');
 
   let calc = {
-    number: number,
-    sum(...args) {
-      let result = this.number;
-      for (let i = 0; i < args.length; i++) {
-        result += args[i]
-      }
-      return result;
+    sum: (...args) => {
+      return args.reduce((prev,current) => {
+        return prev + current;
+      }, number);
     },
-    dif(...args) {
-      let result = this.number;
-      for (let i = 0; i < args.length; i++) {
-        result -= args[i]
-      }
-      return result;
+    dif: (...args) => {
+      return args.reduce((prev,current) => {
+        return prev - current;
+      }, number)
     },
-    div(...args) {
-      for (let i = 0; i < args.length; i++) {
-        if (args[i] === 0) throw new Error('division by 0')
-      }
-      let result = this.number;
-      for (let i = 0; i < args.length; i++) {
-        result /= args[i]
-      }
-      return result;
+    div: (...args) => {
+      return args.reduce((prev,current) => {
+        if (number === 0 || current === 0) {
+          throw new Error('division by 0');
+        }
+        return prev / current;
+      },number)
     },
-    mul(...args) {
-      let result = this.number;
-      for (let i = 0; i < args.length; i++) {
-        result *= args[i]
-      }
-      return result;
-    },
+    mul: (...args) => {
+      return args.reduce((prev, current) => {
+        return prev * current;
+      }, number)
+    }
   }
-
   return calc;
 }
 
