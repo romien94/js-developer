@@ -116,7 +116,7 @@ function deleteTextNodes(where) {
  */
 function deleteTextNodesRecursive(where) {
   if (where.nodeType === 1 && where.childNodes.length > 0) {
-    for (const elem of where.childNodes) {
+    for (const elem of  [...where.childNodes]) {
       if (elem.nodeType === 1) deleteTextNodesRecursive(elem);
       else where.removeChild(elem);
     }
@@ -149,25 +149,33 @@ function collectDOMStat(root) {
   let texts = 0;
 
   function findAllTags(el) {
-      let tag = el.tagName;
-      if (tag) {
-          tags.hasOwnProperty(el.tagName) ? ++tags[tag] : tags[tag] = 1;
-      }
+    let tag = el.tagName;
+    if (tag) {
+      tags.hasOwnProperty(el.tagName) ? ++tags[tag] : tags[tag] = 1;
+    }
   }
 
   function findAllClasses(el) {
-      let classList = el.classList;
-      if (classList && classList.length > 0) {
-          classList.forEach((item, index) => {
-              classes.hasOwnProperty(item) ? ++classes[item] : classes[item] = 1;
-          })
-      }
+    let classList = el.classList;
+    if (classList && classList.length > 0) {
+      classList.forEach((item, index) => {
+        classes.hasOwnProperty(item) ? ++classes[item] : classes[item] = 1;
+      })
+    }
   }
 
   function findAllTextNodes(el) {
-      for (let newEl of el.childNodes) {
-          if (newEl.nodeType === 3) ++texts;
+    for (let child of el.childNodes) {
+      if (child.nodeType === 3) ++texts;
+      else if (child.nodeType === 1) {
+        for (let item of child.childNodes) {
+          item.nodeType === 3 ? ++texts : '';
+        }
       }
+    }
+    // for (let newEl of el.childNodes) {
+    //     if (newEl.nodeType === 3) ++texts;
+    // }
   }
 
   findAllTags(root);
@@ -175,15 +183,15 @@ function collectDOMStat(root) {
   findAllTextNodes(root);
 
   for (let child of root.childNodes) {
-      findAllTags(child);
-      findAllClasses(child);
-      findAllTextNodes(child);
+    findAllTags(child);
+    findAllClasses(child);
+    // findAllTextNodes(child);
   }
 
   return {
-      tags,
-      classes,
-      texts
+    tags,
+    classes,
+    texts
   }
 
 }
