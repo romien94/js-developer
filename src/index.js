@@ -11,11 +11,11 @@
    createDivWithText('loftschool') // создаст элемент div, поместит в него 'loftschool' и вернет созданный элемент
  */
 function createDivWithText(text) {
-    let newEl = document.createElement('div');
+  let newEl = document.createElement("div");
 
-    newEl.textContent = text;
+  newEl.textContent = text;
 
-    return newEl;
+  return newEl;
 }
 
 /*
@@ -27,7 +27,7 @@ function createDivWithText(text) {
    prepend(document.querySelector('#one'), document.querySelector('#two')) // добавит элемент переданный первым аргументом в начало элемента переданного вторым аргументом
  */
 function prepend(what, where) {
-    return where.insertBefore(what, where.firstChild);
+  return where.prepend(what);
 }
 
 /*
@@ -50,15 +50,17 @@ function prepend(what, where) {
    findAllPSiblings(document.body) // функция должна вернуть массив с элементами div и span т.к. следующим соседом этих элементов является элемент с тегом P
  */
 function findAllPSiblings(where) {
-    let elementsArray = [];
+  let elementsArray = [];
 
-    for (const element of where.children) {
-        let sibling = element.nextElementSibling;
+  for (const element of where.children) {
+    let sibling = element.nextElementSibling;
 
-        (sibling && sibling.tagName === 'P') ? elementsArray.push(element) : '';
+    if (sibling && sibling.tagName === "P") {
+      elementsArray.push(element);
     }
+  }
 
-    return elementsArray;
+  return elementsArray;
 }
 
 /*
@@ -79,15 +81,15 @@ function findAllPSiblings(where) {
    findError(document.body) // функция должна вернуть массив с элементами 'привет' и 'loftschool'
  */
 function findError(where) {
-    let result = [];
+  let result = [];
 
-    for (const child of where.children) {
-        if (child.textContent) {
-            result.push(child.textContent);
-        }
+  for (const child of where.children) {
+    if (child.textContent) {
+      result.push(child.textContent);
     }
+  }
 
-    return result;
+  return result;
 }
 
 /*
@@ -103,9 +105,11 @@ function findError(where) {
    должно быть преобразовано в <div></div><p></p>
  */
 function deleteTextNodes(where) {
-    for (const child of where.childNodes) {
-        child.nodeType === 3 ? where.removeChild(child) : '';
+  for (const child of [...where.childNodes]) {
+    if (child.nodeType === 3) {
+      where.removeChild(child);
     }
+  }
 }
 
 /*
@@ -120,15 +124,15 @@ function deleteTextNodes(where) {
    должно быть преобразовано в <span><div><b></b></div><p></p></span>
  */
 function deleteTextNodesRecursive(where) {
-    if (where.nodeType === 1 && where.childNodes.length > 0) {
-        for (const elem of [...where.childNodes]) {
-            if (elem.nodeType === 1) {
-                deleteTextNodesRecursive(elem)
-            } else {
-                where.removeChild(elem)
-            }
-        }
+  if (where.nodeType === 1 && where.childNodes.length > 0) {
+    for (const elem of [...where.childNodes]) {
+      if (elem.nodeType === 1) {
+        deleteTextNodesRecursive(elem);
+      } else {
+        where.removeChild(elem);
+      }
     }
+  }
 }
 
 /*
@@ -152,52 +156,51 @@ function deleteTextNodesRecursive(where) {
    }
  */
 function collectDOMStat(root) {
-    let tags = {};
-    let classes = {};
-    let texts = 0;
+  let tags = {};
+  let classes = {};
+  let texts = 0;
 
-    function collectTags(elem) {
-        for (const child of [...elem.childNodes]) {
-            if (child.nodeType === 3) {
-                continue
-            }
-            let tag = child.tagName;
+  function collectTags(elem) {
+    for (const child of [...elem.childNodes]) {
+      if (child.nodeType === 3) {
+        continue;
+      }
+      let tag = child.tagName;
 
-            tags[tag] ? tags[tag]++ : tags[tag] = 1;
-            collectTags(child);
-        }
+      tags[tag] ? tags[tag]++ : (tags[tag] = 1);
+      collectTags(child);
     }
+  }
 
-    function collectClasses(elem) {
-        for (const child of [...elem.childNodes]) {
-            let childClasses = child.classList;
+  function collectClasses(elem) {
+    for (const child of [...elem.childNodes]) {
+      let childClasses = child.classList;
 
-            if (child.nodeType === 3) {
-                continue
-            }
-            childClasses.forEach((childClass) => {
-                classes[childClass] ? classes[childClass]++ : classes[childClass] = 1;
-            });
-            collectClasses(child);
-        }
+      if (child.nodeType === 3) {
+        continue;
+      }
+      childClasses.forEach((childClass) => {
+        classes[childClass] ? classes[childClass]++ : (classes[childClass] = 1);
+      });
+      collectClasses(child);
     }
+  }
 
-    function collectTexts(elem) {
-        for (const child of [...elem.childNodes]) {
-            child.nodeType === 3 ? texts++ : collectTexts(child);
-        }
+  function collectTexts(elem) {
+    for (const child of [...elem.childNodes]) {
+      child.nodeType === 3 ? texts++ : collectTexts(child);
     }
+  }
 
-    collectTags(root);
-    collectClasses(root);
-    collectTexts(root);
+  collectTags(root);
+  collectClasses(root);
+  collectTexts(root);
 
-    return {
-        tags,
-        classes,
-        texts
-    }
-
+  return {
+    tags,
+    classes,
+    texts,
+  };
 }
 
 /*
@@ -233,42 +236,40 @@ function collectDOMStat(root) {
    }
  */
 function observeChildNodes(where, fn) {
-    let observer = new MutationObserver(e => {
-        let newObj = {
-            type: '',
-            nodes: []
+  let observer = new MutationObserver((e) => {
+    let newObj = {
+      type: "",
+      nodes: [],
+    };
+    let changedNodesList = [];
+    let added = "insert";
+
+    for (const mutation of e) {
+      if (mutation.addedNodes.length > 0) {
+        newObj.type = "insert";
+        for (const el of mutation.addedNodes) {
+          newObj.nodes.push(el);
         }
-        let changedNodesList = [];
-        let added = 'insert';
-
-        for (const mutation of e) {
-            if (mutation.addedNodes.length > 0) {
-                newObj.type = 'insert';
-                for (const el of mutation.addedNodes) {
-                    newObj.nodes.push(el)
-                }
-
-            } else if (mutation.removedNodes.length > 0) {
-                newObj.type = 'remove';
-                for (const el of mutation.removedNodes) {
-                    newObj.nodes.push(el)
-                }
-            }
+      } else if (mutation.removedNodes.length > 0) {
+        newObj.type = "remove";
+        for (const el of mutation.removedNodes) {
+          newObj.nodes.push(el);
         }
+      }
+    }
 
-        return fn(newObj)
-    });
-    observer.observe(where, { childList: true, subtree: true })
+    return fn(newObj);
+  });
+  observer.observe(where, { childList: true, subtree: true });
 }
 
-
 export {
-    createDivWithText,
-    prepend,
-    findAllPSiblings,
-    findError,
-    deleteTextNodes,
-    deleteTextNodesRecursive,
-    collectDOMStat,
-    observeChildNodes
+  createDivWithText,
+  prepend,
+  findAllPSiblings,
+  findError,
+  deleteTextNodes,
+  deleteTextNodesRecursive,
+  collectDOMStat,
+  observeChildNodes,
 };
