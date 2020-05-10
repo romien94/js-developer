@@ -8,6 +8,7 @@
  */
 
 const button = document.createElement('button');
+
 button.id = 'addDiv';
 button.textContent = 'button';
 document.body.appendChild(button)
@@ -33,22 +34,27 @@ const homeworkContainer = document.querySelector('#homework-container');
  */
 
 function createDiv() {
-  const div = document.createElement('div');
-  div.classList.add('draggable-div');
+    const div = document.createElement('div');
 
-  const colorsList = ['red', 'green', 'blue', 'black', 'violet', 'pink', 'lightblue', 'lightgreen', 'orange'];
+    div.classList.add('draggable-div');
 
-  div.style.width = randomize(10, 300) + 'px';
-  div.style.height = randomize(10, 300) + 'px';
-  div.style.backgroundColor = colorsList[randomize(0, colorsList.length - 1)];
-  div.style.left = randomize(0, 100) + '%';
-  div.style.top = randomize(0, 100) + '%';
+    let styles = {
+        width: `${randomize(10, 300)}%`,
+        height: `${randomize(10, 300)}%`,
+        backgroundColor: `#${(0x1000000 + Math.floor(Math.random() * 0x1000000)).toString(16).substr(1)}`,
+        left: `${randomize(0, 100)}%`,
+        top: `${randomize(0, 100)}%`
+    }
 
-  function randomize(min, max) {
-    return Math.floor(min + Math.random() * (max + 1 - min));
-  }
+    for (const el in styles) {
+        div.style[el] = styles[el];
+    }
 
-  return div;
+    function randomize(min, max) {
+        return Math.floor(min + Math.random() * (max + 1 - min));
+    }
+
+    return div;
 }
 
 /*
@@ -60,22 +66,42 @@ function createDiv() {
    addListeners(newDiv);
  */
 function addListeners(target) {
+    target.setAttribute('draggable', true);
+
+    target.addEventListener('dragstart', e => {
+        let startXPos = e.pageX - target.getBoundingClientRect().x;
+        let startYPos = e.pageY - target.getBoundingClientRect().y;
+
+        target.addEventListener('drag', e => {
+            changePosition(e.pageX, e.pageY)
+        });
+
+        target.addEventListener('dragend', e => {
+            changePosition(e.pageX, e.pageY)
+        });
+
+        function changePosition(pageX, pageY) {
+            target.style.left = pageX - startXPos + 'px';
+            target.style.top = pageY - startYPos + 'px';
+        }
+
+    })
 }
 
 let addDivButton = homeworkContainer.querySelector('#addDiv');
 
 addDivButton.addEventListener('click', function () {
-  // создать новый div
-  const div = createDiv();
+    // создать новый div
+    const div = createDiv();
 
-  // добавить на страницу
-  homeworkContainer.appendChild(div);
-  // назначить обработчики событий мыши для реализации D&D
-  addListeners(div);
-  // можно не назначать обработчики событий каждому div в отдельности, а использовать делегирование
-  // или использовать HTML5 D&D - https://www.html5rocks.com/ru/tutorials/dnd/basics/
+    // добавить на страницу
+    homeworkContainer.appendChild(div);
+    // назначить обработчики событий мыши для реализации D&D
+    addListeners(div);
+    // можно не назначать обработчики событий каждому div в отдельности, а использовать делегирование
+    // или использовать HTML5 D&D - https://www.html5rocks.com/ru/tutorials/dnd/basics/
 });
 
 export {
-  createDiv
+    createDiv
 };
