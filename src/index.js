@@ -116,7 +116,7 @@ function deleteTextNodes(where) {
  */
 function deleteTextNodesRecursive(where) {
   if (where.nodeType === 1 && where.childNodes.length > 0) {
-    for (const elem of  [...where.childNodes]) {
+    for (const elem of [...where.childNodes]) {
       if (elem.nodeType === 1) deleteTextNodesRecursive(elem);
       else where.removeChild(elem);
     }
@@ -148,45 +148,35 @@ function collectDOMStat(root) {
   let classes = {};
   let texts = 0;
 
-  function findAllTags(el) {
-    let tag = el.tagName;
-    if (tag) {
-      tags.hasOwnProperty(el.tagName) ? ++tags[tag] : tags[tag] = 1;
+  function collectTags(elem) {
+    for (const child of [...elem.childNodes]) {
+      if (child.nodeType === 3) continue;
+      let tag = child.tagName;
+      tags[tag] ? tags[tag]++ : tags[tag] = 1;
+      collectTags(child);
     }
   }
 
-  function findAllClasses(el) {
-    let classList = el.classList;
-    if (classList && classList.length > 0) {
-      classList.forEach((item, index) => {
-        classes.hasOwnProperty(item) ? ++classes[item] : classes[item] = 1;
-      })
+  function collectClasses(elem) {
+    for (const child of [...elem.childNodes]) {
+      let childClasses = child.classList;
+      if (child.nodeType === 3) continue;
+      childClasses.forEach((childClass, index) => {
+        classes[childClass] ? classes[childClass]++ : classes[childClass] = 1;
+      });
+      collectClasses(child);
     }
   }
 
-  function findAllTextNodes(el) {
-    for (let child of el.childNodes) {
-      if (child.nodeType === 3) ++texts;
-      else if (child.nodeType === 1) {
-        for (let item of child.childNodes) {
-          item.nodeType === 3 ? ++texts : '';
-        }
-      }
+  function collectTexts(elem) {
+    for (const child of [...elem.childNodes]) {
+      child.nodeType === 3 ? texts++ : collectTexts(child);
     }
-    // for (let newEl of el.childNodes) {
-    //     if (newEl.nodeType === 3) ++texts;
-    // }
   }
 
-  findAllTags(root);
-  findAllClasses(root);
-  findAllTextNodes(root);
-
-  for (let child of root.childNodes) {
-    findAllTags(child);
-    findAllClasses(child);
-    // findAllTextNodes(child);
-  }
+  collectTags(root);
+  collectClasses(root);
+  collectTexts(root);
 
   return {
     tags,
@@ -195,6 +185,8 @@ function collectDOMStat(root) {
   }
 
 }
+
+
 /*
  Задание 8 *:
 
@@ -228,6 +220,8 @@ function collectDOMStat(root) {
    }
  */
 function observeChildNodes(where, fn) {
+  let observer = new MutationObserver((info) => console.log(info));
+  observer.observe(where, [{subtree: true}]);
 }
 
 export {
