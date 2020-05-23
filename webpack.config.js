@@ -31,7 +31,8 @@ const html = files['.hbs']
         return new HtmlPlugin({
             title: file.name,
             template: file.absPath,
-            filename: `${file.name}.html`,
+            // filename: `${file.name}.html`,
+            filename: `index.html`,
             chunks: [file.name]
         });
     });

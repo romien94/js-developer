@@ -1,9 +1,33 @@
 <!DOCTYPE html>
 <html>
+
 <head>
   <meta charset="UTF-8">
   <title>{{htmlWebpackPlugin.options.title}}</title>
 </head>
+<style>
+  * {
+    padding: 0;
+    margin: 0;
+    box-sizing: border-box;
+  }
+</style>
 <body>
+  <div id="container">
+    <div id="map" style="width: 100vw; height: 100vh"></div>
+  </div>
+  <script src="https://api-maps.yandex.ru/2.1/?apikey=5915a898-adf7-4f19-89f2-8f5b0786d9bf&lang=ru_RU"
+    type="text/javascript"></script>
+  <script type="text/javascript">
+    ymaps.ready(init);
+    function init() {
+      var myMap = new ymaps.Map("map", {
+        center: [55.76, 37.64],
+        controls:['default'],
+        zoom: 11,
+      });
+    }
+  </script>
 </body>
+
 </html>
