@@ -1,0 +1,55 @@
+<!DOCTYPE html>
+<html xmlns="http://www.w3.org/1999/xhtml">
+  <head>
+    <title>Быстрый старт. Размещение интерактивной карты на странице</title>
+    <meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
+    <link rel="stylesheet" href="main.css" />
+    <script
+      src="https://api-maps.yandex.ru/2.1/?apikey=5915a898-adf7-4f19-89f2-8f5b0786d9bf&lang=ru_RU"
+      type="text/javascript"
+    ></script>
+  </head>
+
+  <body>
+    <form class="menu">
+      <div class="menu__top">
+        <div class="menu__address"></div>
+        <button type="button" class="menu__close-button" id="close-button">X</button>
+      </div>
+      <ul class="menu__reviews">
+        <li class="menu__item--blank">Пока нет отзывов...</li>
+      </ul>
+      <div class="menu__review review">
+        <h3 class="review__title">Ваш отзыв</h3>
+        <label for="" class="menu__field">
+          <input
+            type="text"
+            name="name"
+            class="menu__input"
+            placeholder="Ваше имя"
+          />
+        </label>
+        <label for="" class="menu__field">
+          <input
+            type="text"
+            name="company"
+            class="menu__input"
+            placeholder="Укажите место"
+          />
+        </label>
+        <label for="" class="menu__field">
+          <textarea
+            class="menu__input"
+            name="commentary"
+            name=""
+            id=""
+            placeholder="Поделитесь впечатлениями"
+          ></textarea>
+        </label>
+        <button class="menu__button" id="submit-button" class>Добавить</button>
+      </div>
+    </form>
+    <div id="map" style="width: 100vw; height: 100vh;"></div>
+    <script src="index.js"></script>
+  </body>
+</html>
