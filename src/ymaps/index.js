@@ -1,7 +1,6 @@
 ymaps.ready(init);
 
 function init() {
-  const geoObjects = [];
   const menu = document.querySelector(".menu");
   const submitButton = menu.querySelector("#submit-button");
   const closeButton = menu.querySelector("#close-button");
@@ -17,27 +16,68 @@ function init() {
     behaviors: ["drag"],
   });
 
-  renderLocalStorage();
+  // renderLocalStorage();
+
+  const customItemContentLayout = ymaps.templateLayoutFactory.createClass(
+    "<div class=ballon_body>{{ properties.balloonContentBody || raw }}</div>"
+  );
 
   const clusterer = new ymaps.Clusterer({
     clusterDisableClickZoom: true,
     clusterOpenBalloonOnClick: true,
+    // Устанавливаем стандартный макет балуна кластера "Карусель".
+    clusterBalloonContentLayout: "cluster#balloonCarousel",
+    // Устанавливаем собственный макет.
+    clusterBalloonItemContentLayout: customItemContentLayout,
+    // Устанавливаем режим открытия балуна.
+    // В данном примере балун никогда не будет открываться в режиме панели.
+    clusterBalloonPanelMaxMapArea: 0,
+    // Устанавливаем размеры макета контента балуна (в пикселях).
+    clusterBalloonContentLayoutWidth: 200,
+    clusterBalloonContentLayoutHeight: 130,
+    // Устанавливаем максимальное количество элементов в нижней панели на одной странице
+    clusterBalloonPagerSize: 5,
+    // Настройка внешнего вида нижней панели.
+    // Режим marker рекомендуется использовать с небольшим количеством элементов.
+    // clusterBalloonPagerType: 'marker',
+    // Можно отключить зацикливание списка при навигации при помощи боковых стрелок.
+    // clusterBalloonCycling: false,
+    // Можно отключить отображение меню навигации.
+    // clusterBalloonPagerVisible: false
   });
 
-  map.geoObjects.add(clusterer);
-  clusterer.add(geoObjects);
-  clusterer.events.add("click", (e) => {
-    const target = e.get("target");
-    const geoObjects = target.getGeoObjects();
-    for (const el of geoObjects) {
-      const coords = el.geometry.getCoordinates();
-      const address = findAddressByCoords(coords).then((res) => {
-        const reviews = JSON.parse(localStorage[res]).slice(1);
-        console.log(reviews);
-      });
+  const placemarks = [];
+  renderLocalStorage();
+
+  function renderLocalStorage() {
+    for (const item in localStorage) {
+      if (typeof localStorage[item] !== "string") continue;
+      const [coords, ...reviews] = JSON.parse(localStorage[item]);
+      for (const review of reviews) {
+        const placemark = new ymaps.Placemark(coords, {
+          balloonContentBody: createReviewNode(review),
+        });
+        placemarks.push(placemark);
+      }
     }
-  });
+  }
 
+  clusterer.add(placemarks);
+  map.geoObjects.add(clusterer);
+
+  function createReviewNode(review) {
+    const node = [
+      '<div class="slider__item">',
+      '<div class="slider__content">',
+      `<span class="slider__company">${review.company}</span>`,
+      `<a href="" class="slider__address">${review.address}</a>`,
+      `<span class="slider__commentary">${review.commentary}</span>`,
+      "</div>",
+      `<span class="slider__date">${review.date}</span>`,
+      "</div>",
+    ].join("");
+    return node;
+  }
 
   map.events.add("click", (e) => {
     coords = e.get("coords");
@@ -58,26 +98,12 @@ function init() {
       menu.classList.remove("menu--visible");
     }
     const sliderList = document.querySelector(".slider__list");
-    const leftButton = document.querySelector(".slider__button");
-    const rightButton = document.querySelector(".slider__button--right");
     const link = document.querySelector(".slider__address");
-    const maxRight = sliderList.children.length * 100;
-    let currentLeft = 0;
-
-    leftButton.addEventListener("click", (e) => {
-      currentLeft += 100;
-      if (currentLeft <= maxRight) currentLeft = 0;
-      sliderList.style.transform = `translateX(${currentLeft}%)`;
-    });
-    rightButton.addEventListener("click", (e) => {
-      currentLeft -= 100;
-      if (currentLeft <= -maxRight) currentLeft = 0;
-      sliderList.style.transform = `translateX(${currentLeft}%)`;
-    });
 
     link.addEventListener("click", (e) => {
       e.preventDefault();
-      const address = sliderList.querySelector(".slider__address").textContent;
+      const address = e.target.textContent;
+      const menuAddress = document.querySelector(".menu__address");
       const x = e.clientX;
       const y = e.clientY;
 
@@ -88,7 +114,7 @@ function init() {
       const arr = JSON.parse(localStorage[address]).slice(1);
       const fragment = document.createDocumentFragment();
       for (const elem of arr) {
-        const review = createReviewNode(elem);
+        const review = createReviewLi(elem);
         fragment.appendChild(review);
       }
       menuReviews.appendChild(fragment);
@@ -97,93 +123,29 @@ function init() {
 
   submitButton.addEventListener("click", (e) => {
     e.preventDefault();
-    if (checkIfContaintsBlankElement(menuReviews)) {
-      menuReviews.removeChild(menuBlank);
-      createReview()
-        .then((review) => {
-          const address = review.address;
-          const coords = JSON.parse(localStorage[address])[0];
-          const node = createReviewNode(review);
-          menuReviews.appendChild(node);
-          return { address, coords };
-        })
-        .then(({ address, coords }) => {
-          const placemark = createPlacemark(address, coords);
-          map.geoObjects.add(placemark);
+    if (checkIfContaintsBlankElement(menuReviews)) menuReviews.removeChild(menuBlank);
+    createReview()
+      .then((review) => {
+        const address = review.address;
+        const coords = JSON.parse(localStorage[address])[0];
+        const node = createReviewLi(review);
+        menuReviews.appendChild(node);
+        return { review, address, coords };
+      })
+      .then(({ review, address, coords }) => {
+        const placemark = new ymaps.Placemark(coords, {
+          balloonContentBody: createReviewNode(review),
         });
-    } else {
-      createReview()
-        .then(async (review) => createReviewNode(review))
-        .then((review) => {
-          menuReviews.appendChild(review);
-        });
-    }
+        placemarks.push(placemark);
+        clusterer.add(placemark);
+      });
+    renderLocalStorage();
   });
 
   closeButton.addEventListener("click", (e) => {
     const address = menu.querySelector(".menu__address").textContent;
     menu.classList.remove("menu--visible");
   });
-
-  function createPlacemark(address, coords) {
-    const CustomLayoutClass = ymaps.templateLayoutFactory.createClass(
-      '<div class="slider">' +
-        '<button class="slider__button slider__button--left"><</button>' +
-        '<ul class="slider__list">' +
-        "{% for review in properties.reviews %}" +
-        '<li class="slider__item">' +
-        '<div class="slider__content">' +
-        '<span class="slider__company">{{review.company}}</span>' +
-        '<a href="#" class="slider__address">{{review.address}}</a>' +
-        '<span class="slider__commentary">{{review.commentary}}</span>' +
-        "</div>" +
-        '<span class="slider__date">{{review.date}}</span>' +
-        "</li>" +
-        "{% endfor %}" +
-        "</ul>" +
-        '<button class="slider__button slider__button--right">></button>' +
-        '<ul class="paginator">' +
-        "{% for index,item in properties.reviews %}" +
-        `<li>{{index}}</li>` +
-        "{% endfor %}" +
-        "</ul>" +
-        "</div>"
-    );
-    const arr = JSON.parse(localStorage[address]).slice(1);
-    const placemark = new ymaps.Placemark(
-      coords,
-      {
-        reviews: arr,
-      },
-      {
-        balloonContentLayout: CustomLayoutClass,
-      }
-    );
-    if (arr.length > 1) {
-      placemark.properties.set({
-        iconContent: `${arr.length}`,
-        id: address,
-      });
-    }
-    geoObjects.push(placemark);
-    return placemark;
-  }
-
-  function renderLocalStorage(item) {
-    if (item) {
-      const arr = JSON.parse(localStorage[item]);
-      const placemark = createPlacemark(item, arr[0]);
-      map.geoObjects.add(placemark);
-    } else {
-      for (const item in localStorage) {
-        if (typeof localStorage[item] === "string") {
-          const arr = JSON.parse(localStorage[item]);
-          const placemark = createPlacemark(item, arr[0]);
-          map.geoObjects.add(placemark);
-        }
-      }
-    }
-  }
 
   function checkIfContaintsBlankElement(node) {
     if (node.children[0].classList.contains("menu__item--blank")) {
@@ -214,7 +176,7 @@ function init() {
     return review;
   }
 
-  function createReviewNode(review) {
+  function createReviewLi(review) {
     const li = document.createElement("li");
 
     li.classList.add("menu__item");
@@ -241,7 +203,6 @@ function init() {
       return address;
     });
     return address;
-    // menu.querySelector(".menu__address").textContent = address;
   }
 
   function openMenu(x, y) {
